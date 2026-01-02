@@ -1,12 +1,6 @@
-pandas
-numpy
 streamlit
+pandas
 plotly
 vaderSentiment
-nltk
 scikit-learn
-bertopic
-praw
-snscrape
-tweepy
-textblob
+numpy
