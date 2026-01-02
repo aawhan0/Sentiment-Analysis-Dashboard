@@ -1,4 +1,3 @@
-@"
 pandas
 numpy
 streamlit
@@ -11,4 +10,3 @@ praw
 snscrape
 tweepy
 textblob
-"@ | Out-File requirements.txt -Encoding utf8
