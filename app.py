@@ -1,49 +1,56 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import numpy as np
 
 st.set_page_config(page_title="Sentiment Dashboard", layout="wide")
 st.title("🚀 Sentiment Analysis Dashboard")
-st.markdown("**1.55M tweets analyzed** | VADER + LDA topics")
+st.markdown("**1.55M tweets analyzed** | VADER + LDA")
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv('data/processed/topics_data.csv')
-    df['date'] = pd.to_datetime(df['date'])
-    return df.sample(50000)  # Fast load
+    df_sent = pd.read_csv('data/processed/sentiment_data.csv')
+    try:
+        df_topics = pd.read_csv('data/processed/topics_data.csv')
+        df = pd.concat([df_sent, df_topics[['topic']].fillna(-1)], axis=1)
+    except:
+        df = df_sent.copy()
+        df['topic'] = -1  # No topics
+    return df.sample(min(50000, len(df)), random_state=42)
 
 df = load_data()
+st.write(f"Loaded {len(df):,} tweets")  # Debug
 
-# Sidebar filters
-st.sidebar.header("Filters")
-sentiment_filter = st.sidebar.multiselect("Sentiment", df['sentiment'].unique(), default=df['sentiment'].unique())
-topic_filter = st.sidebar.multiselect("Topics", sorted(df['topic'].unique()), default=[0,1,2,3])
+# Sidebar
+st.sidebar.header("🔍 Filter")
+sent_f = st.sidebar.multiselect("Sentiment", sorted(df['sentiment'].unique()), default=['positive', 'negative', 'neutral'])
+df_f = df[df['sentiment'].isin(sent_f)]
 
-df_filtered = df[df['sentiment'].isin(sentiment_filter) & df['topic'].isin(topic_filter)]
+if 'topic' in df.columns:
+    top_f = st.sidebar.multiselect("Topic", sorted(df['topic'].dropna().unique()), default=sorted(df['topic'].dropna().unique())[:4])
+    df_f = df_f[df_f['topic'].isin(top_f)]
 
-# Row 1: Sentiment pie + topic bar
+# Charts
 col1, col2 = st.columns(2)
 with col1:
-    fig_pie = px.pie(df_filtered, names='sentiment', title="Sentiment Distribution")
-    st.plotly_chart(fig_pie, use_container_width=True)
+    fig1 = px.pie(df_f, names='sentiment', title="Sentiment Distribution")
+    st.plotly_chart(fig1, use_container_width=True)
 with col2:
-    fig_bar = px.bar(df_filtered['topic'].value_counts().reset_index(), 
-                     x='topic', y='count', title="Topic Counts")
-    st.plotly_chart(fig_bar, use_container_width=True)
+    if 'topic' in df_f.columns:
+        fig2 = px.bar(df_f['topic'].value_counts().head(10).reset_index(), x='topic', y='count', title="Top Topics")
+        st.plotly_chart(fig2, use_container_width=True)
 
-# Row 2: Sentiment by topic
-fig_heatmap = px.density_heatmap(df_filtered, x='topic', y='sentiment', 
-                                 title="Sentiment Heatmap by Topic")
-st.plotly_chart(fig_heatmap, use_container_width=True)
+# Heatmap
+if 'topic' in df_f.columns:
+    fig3 = px.density_heatmap(df_f, x='topic', y='sentiment', nbinsx=10, title="Sentiment by Topic")
+    st.plotly_chart(fig3, use_container_width=True)
 
-# Row 3: Sample tweets
-st.subheader("Sample Tweets")
-st.dataframe(df_filtered[['clean_text', 'sentiment', 'topic']].head(10), use_container_width=True)
+# Samples
+st.subheader("📝 Sample Tweets")
+st.dataframe(df_f[['clean_text', 'sentiment', 'compound_score']].head(10), use_container_width=True)
 
 # Metrics
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Tweets", len(df_filtered))
-col2.metric("Positive %", f"{(df_filtered['sentiment']=='positive').mean():.1%}")
-col3.metric("Avg Topics", df_filtered['topic'].nunique())
+c1, c2, c3 = st.columns(3)
+c1.metric("Tweets", len(df_f))
+c2.metric("Positive", f"{(df_f['sentiment']=='positive').mean():.1%}")
+c3.metric("Avg Score", df_f['compound_score'].mean().round(3))
