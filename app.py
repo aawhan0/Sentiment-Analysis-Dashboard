@@ -30,11 +30,17 @@ df = load_data()
 
 # Filters
 st.sidebar.header("🔧 Filters")
-sentiment_filter = st.sidebar.multiselect("Sentiment", ['positive', 'negative', 'neutral'], default=['positive', 'negative', 'neutral'])
+sentiment_options = ['positive', 'negative', 'neutral']
+sentiment_filter = st.sidebar.multiselect("Sentiment", 
+                                         options=sentiment_options, 
+                                         default=sentiment_options)
 min_score = st.sidebar.slider("Min Score", -1.0, 1.0, -1.0)
 
-filtered_df = df[df['sentiment'].isin(sentiment_filter) & (df['compound'] >= min_score)]
 
+filtered_df = df[df['sentiment'].isin(sentiment_filter) & (df['compound'] >= min_score)]
+if len(filtered_df) == 0:
+    st.warning("No data matches filters. Reset to view all.")
+    filtered_df = df.head(10)
 # KPIs
 col1, col2, col3, col4 = st.columns(4)
 pos_pct = len(filtered_df[filtered_df.sentiment == 'positive']) / len(filtered_df) * 100 if len(filtered_df) > 0 else 0
