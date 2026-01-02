@@ -1,8 +1,42 @@
 @"
-data/
+# Python
 __pycache__/
-*.csv
-*.pkl
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+local_settings.py
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter
 .ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Data (keep CSV for demo)
+# data/raw/
+# *.pkl
+
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 "@ | Out-File .gitignore -Encoding utf8
