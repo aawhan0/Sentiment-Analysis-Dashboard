@@ -1,0 +1,14 @@
+@"
+pandas
+numpy
+streamlit
+plotly
+vaderSentiment
+nltk
+scikit-learn
+bertopic
+praw
+snscrape
+tweepy
+textblob
+"@ | Out-File requirements.txt -Encoding utf8
